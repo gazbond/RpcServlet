@@ -1,0 +1,186 @@
+<!--
+ * Copyright (c) 2009, Gareth Bond, http://www.gazbond.co.uk
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without modification, are permitted provided
+ * that the following conditions are met:
+ *
+ *   * Redistributions of source code must retain the above copyright notice, this list of conditions and the
+ *     following disclaimer.
+ *   * Redistributions in binary form must reproduce the above copyright notice, this list of conditions and
+ *     the following disclaimer in the documentation and/or other materials provided with the distribution.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED
+ * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
+ * PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY
+ * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+ * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
+ * THE POSSIBILITY OF SUCH DAMAGE.
+ -->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+    <head>
+        <title>RpcServlet Test</title>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+        <script type="text/javascript" src="jquery.js"></script>
+        <script type="text/javascript" src="jquery-rpc-client.js"></script>
+        <script type="text/javascript">
+
+            /**
+             * URL of RPC service.
+             */
+            var url = 'services/test';
+
+            /**
+             * Example param, no param.
+             */
+            var noParam = null;
+
+            /**
+             * Example param, int.
+             */
+            var intParam = 10;
+
+            /**
+             * Example param, double.
+             */
+            var doubleParam = 10.33;
+
+            /**
+             * Example param, long.
+             */
+            var longParam = 123456789012;
+
+            /**
+             * Example param, boolean.
+             */
+            var booleanParam = true;
+
+            /**
+             * Example param, string.
+             */
+            var stringParam = 'hi!';
+
+            /**
+             * Example param, object.
+             */
+            var objectParam = {
+                one : [1, 2, 3, 4],
+                two : {
+                    array : [5, 6, 7], 
+                    string : 'hi!',
+                    bool : false
+                },
+                three : [8, 9, {
+                        string : 'hi!',
+                        bool : true
+                    }, {
+                        one : 1,
+                        two : 2,
+                        three: 3
+                    }]
+            };
+
+            /**
+             * Example param, array.
+             */
+            var arrayParam = [1, 2, {
+                    one : 1,
+                    two : 2,
+                    three : [3, 'hi!', false]
+                }, [3, 4, 5]];
+
+            /**
+             * Methods and params array to invoke.
+             */
+            var methods = [
+                {echo : intParam},
+                {echo : doubleParam},
+                {echo : longParam},
+                {echo : booleanParam},
+                {echo : stringParam},
+                {echo : objectParam},
+                {echo : [arrayParam]},
+                {echo : [intParam, doubleParam, longParam, booleanParam, stringParam]},
+                {echoWrappr : intParam},
+                {echoWrappr : doubleParam},
+                {echoWrappr : longParam},
+                {echoWrappr : booleanParam},
+                {returnVoid : noParam},
+                {returnNull : noParam},
+                {throwException : noParam},
+                {throwError : noParam},
+                {hasValue : noParam},
+                {saveValue : stringParam},
+                {hasValue : noParam},
+                {retrieveValue : noParam},
+                {deleteValue : noParam},
+                {hasValue : noParam},
+                {retrieveValue : noParam},
+                {_describe : noParam}
+            ];
+
+            /**
+             * Invoke method and params at the given index.
+             */
+            function invoke(index) {
+
+                //ignore if index is out of bounds
+                if(index < methods.length) {
+
+                    //current method and params object
+                    var curr = methods[index];
+
+                    //get method and params
+                    for(var member in curr) {
+
+                        //current method
+                        var currMethod = member;
+
+                        //current params
+                        var currParam = curr[member];
+
+                        //print remote call info
+                        print('invoking: ' + currMethod + '(' + JSON.stringify(currParam) + ')');
+
+                        //execute remote call - currMethod with currParam
+                        $.rpc.invoke(url, currMethod, currParam, function(data) {
+
+                            //print response of remote call
+                            print('response: ');
+                            print(JSON.stringify(data, 2));
+                            print('--------------------------------------------------------------');
+
+                            //invoke next method
+                            invoke(index + 1);
+                        });
+                    }
+                }
+            }
+
+            /**
+             * Print to the console element.
+             */
+            function print(value) {
+
+                $('#console').append(value + '\n');
+            }
+
+            /**
+             * Initialize applicaion.
+             */
+            $(document).ready(function() {
+
+                //invoke the first method
+                invoke(0);                
+            });
+  
+        </script>
+    </head>
+    <body>
+        <h3>RpcServlet Test</h3>
+        <pre id="console"></pre>
+    </body>
+</html>

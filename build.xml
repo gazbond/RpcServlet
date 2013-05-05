@@ -1,0 +1,22 @@
+<project name="rpc-servlet" default="copy" basedir=".">
+	<target name="init">
+		<property name="sourceDir" value="src" />
+		<property name="outputDir" value="web/WEB-INF/classes" />
+		<property name="servlet" value="servlet-api.jar" />
+		<property name="propsfile" value="rpc-services.properties" />
+	</target>
+	<target name="clean" depends="init">
+		<delete dir="${outputDir}" />
+	</target>
+	<target name="prepare" depends="clean">
+		<mkdir dir="${outputDir}" />
+	</target>
+	<target name="compile" depends="prepare">
+		<javac srcdir="${sourceDir}" destdir="${outputDir}">
+			<classpath path="${servlet}" />  
+		</javac>
+	</target>
+	<target name="copy" depends="compile">
+		<copy file="${propsfile}" tofile="${outputDir}/${propsfile}"/>
+	</target>
+</project>

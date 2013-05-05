@@ -1,0 +1,365 @@
+<!--
+ * Copyright (c) 2009, Gareth Bond, http://www.gazbond.co.uk
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without modification, are permitted provided
+ * that the following conditions are met:
+ *
+ *   * Redistributions of source code must retain the above copyright notice, this list of conditions and the
+ *     following disclaimer.
+ *   * Redistributions in binary form must reproduce the above copyright notice, this list of conditions and
+ *     the following disclaimer in the documentation and/or other materials provided with the distribution.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED
+ * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
+ * PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY
+ * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+ * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
+ * THE POSSIBILITY OF SUCH DAMAGE.
+ -->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+    <head>
+        <title>RpcServlet Chat</title>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+        <script type="text/javascript" src="jquery.js"></script>
+        <script type="text/javascript" src="jquery-rpc-client.js"></script>
+        <script type="text/javascript">
+
+            /**
+             * URL of RPC service
+             */
+            var url = 'services/chat';
+
+            /**
+             * Number of rows to return
+             */
+            var rows = 8;
+
+            /**
+             * Current posts page
+             */
+            var postsPage = 0;
+
+            /**
+             * Currnt users page
+             */
+            var usersPage = 0;
+
+            /**
+             * Username to log in with
+             */
+            var username;
+
+            /**
+             * User selected to view
+             */
+            var selectedUser;
+
+            /**
+             * Reference to login area element selector
+             */
+            var loginAreaSel;
+
+            /**
+             * Reference to message area element selector
+             */
+            var messageAreaSel;
+
+            /**
+             * Reference to login area input element selector
+             */
+            var usernameASel;
+
+            /**
+             * Reference to login area input element selector
+             */
+            var usernameBSel;
+
+            /**
+             * Reference to message area textarea element selector
+             */
+            var messageSel;
+
+            /**
+             * Reference to users area list element selector
+             */
+            var usersSel;
+
+            /**
+             * Reference to posts area list element selector
+             */
+            var postsSel;
+
+            /**
+             * Refresh list of all posts or for a specific user
+             */
+            function refreshPosts(user) {
+                
+                var func = function(data) {
+                    print('response: ');
+                    print(JSON.stringify(data, 2), true);
+                    var posts = data['return'];
+                    postsSel.html('');
+                    for(i = 0; i < posts.length; i++) {
+                        postsSel.append('<p>' + posts[i], '</p>');
+                    }
+                };
+                if(user == undefined) {
+                    print('invoking: ' + 'getPosts' + '(' + postsPage + ', ' + rows + ')');
+                    $.rpc.invoke(url, 'getPosts', [postsPage, rows], func);
+                }
+                else {
+                    print('invoking: ' + 'getPosts' + '(' + JSON.stringify(user) + ', ' + postsPage + ', ' + rows + ')');
+                    $.rpc.invoke(url, 'getPosts', [user, postsPage, rows], func);
+                }
+            }
+
+            /**
+             * Refresh list of all users
+             */
+            function refreshUsers() {
+                
+                var func = function(data) {
+                    print('response: ');
+                    print(JSON.stringify(data, 2), true);
+                    var users = data['return'];
+                    usersSel.html('');
+                    usersSel.append('<a href="javascript:selectUser();">All</a><br>');
+                    for(i = 0; i < users.length; i++) {
+                        var name = users[i];
+                        if(name == username) {
+                            name += '*';
+                        }
+                        usersSel.append('<a href="javascript:selectUser(\'' + users[i] + '\');">' + name + '</a><br>');
+                    }
+                };
+                print('invoking: ' + 'getUsers' + '(' + usersPage + ', ' + rows + ')');
+                $.rpc.invoke(url, 'getUsers', [usersPage, rows], func);
+            }
+
+            /**
+             * Select a specific user and refresh posts list
+             */
+            function selectUser(user) {
+
+                selectedUser = user;
+                postsPage = 0;
+                refreshPosts(selectedUser);
+            }
+
+            /**
+             * Print to console area
+             */
+            function print(value, line) {
+
+                var consoleSel = $('#console');
+                consoleSel.append(value + '\n');
+                if(line) {
+                    consoleSel.append('--------------------------------------------------------------\n');
+                }
+            }
+
+            /**
+             * Initialize applicaion.
+             */
+            $(document).ready(function() {
+
+                //set login area element selector reference
+                loginAreaSel = $('#loginArea');
+
+                //set message area element selector reference
+                messageAreaSel = $('#messageArea');
+
+                //set login area input element selector reference
+                usernameASel = $('#usernameA');
+
+                //set message area input element selector reference
+                usernameBSel = $('#usernameB');
+
+                //set message area textarea element selector reference
+                messageSel = $("#message");
+
+                //set users area list element selector reference
+                usersSel = $("#users");
+
+                //set posts area list element selector reference
+                postsSel = $('#posts');
+
+                /**
+                 * Add event handler to log in button
+                 */
+                $('#login').click(function() {
+                    username = usernameASel.val();
+                    if(username == '') {
+                        alert('Please enter a username!');
+                    }
+                    else {
+                        print('invoking: ' + 'login' + '(' + JSON.stringify(username) + ')');
+                        $.rpc.invoke(url, 'login', username, function(data) {
+                            print('response: ');
+                            print(JSON.stringify(data, 2), true);
+                            if(data['return'] == false) {
+                                messageAreaSel.val('');
+                                alert('Username is being used, please choose another!');
+                            }
+                            else {
+                                usernameBSel.val(username);
+                                loginAreaSel.hide();
+                                messageAreaSel.show();
+                                refreshUsers();
+                            }
+                            
+                        });
+                    }
+                });
+
+                /**
+                 * Add event handler to log out button
+                 */
+                $('#logout').click(function() {
+                    print('invoking: ' + 'logout' + '(' + JSON.stringify(username) + ')');
+                    $.rpc.invoke(url, 'logout', username, function(data) {
+                        print('response: ');
+                        print(JSON.stringify(data, 2), true);
+                        if(data['return'] == true) {
+                            username = null;
+                            usernameBSel.val('');
+                            messageAreaSel.hide();
+                            loginAreaSel.show();
+                            refreshUsers();
+                        }
+                    });
+                });
+
+                /**
+                 * Add event handler to post button
+                 */
+                $('#post').click(function() {
+                    var message = messageSel.val();
+                    message = message.replace(/\n/g, '<br>');
+                    if(message == '') {
+                        alert('Please enter a message!')
+                    }
+                    else {
+                        print('invoking: ' + 'post' + '(' + JSON.stringify(username) + ', ' + JSON.stringify(message) + ')');
+                        $.rpc.invoke(url, 'post', [username, message], function(data) {
+                            print('response: ');
+                            print(JSON.stringify(data, 2), true);
+                            if(data['return'] == true) {
+                                messageSel.val('');
+                                refreshPosts(selectedUser);
+                            }
+                        });
+                    }
+                });
+
+                /**
+                 * Add event handler to previous message button
+                 */
+                $('#prevMsg').click(function() {
+                    if(postsPage - 1 >= 0) {
+                        postsPage--;
+                        refreshPosts(selectedUser);
+                    }
+
+                });
+
+                /**
+                 * Add event handler to next message button
+                 */
+                $('#nextMsg').click(function() {
+                    postsPage++;
+                    refreshPosts(selectedUser);
+                });
+
+                /**
+                 * Add event handler to previous user button
+                 */
+                $('#prevUser').click(function() {
+                    if(usersPage - 1 >= 0) {
+                        usersPage--;
+                        refreshUsers();
+                    }
+                });
+
+                /**
+                 * Add event handler to next user button
+                 */
+                $('#nextUser').click(function() {
+                    usersPage++;
+                    refreshUsers();
+                });
+
+                /**
+                 * Add event handler to refresh button
+                 */
+                $('#refresh').click(function() {
+                    refreshPosts(selectedUser);
+                    refreshUsers();
+                });
+
+                /**
+                 * Add event handler for auto log out
+                 */
+                $(window).unload(function() {
+                    $.rpc.invoke(url, 'logout', username);
+                });
+                refreshPosts();
+                refreshUsers();
+            });
+
+        </script>
+    </head>
+    <body>
+        <h3>RpcServlet Chat</h3>
+        <div id="loginArea">
+            <h4>Login:</h4>
+            <label>Username:</label>
+            <input id="usernameA" type="text">
+            <button id="login">Login</button>
+            <br>
+            <br>
+        </div>
+        <div id="messageArea" style="display:none;">
+            <h4>Post Message:</h4>
+            <label>Username:</label>
+            <input id="usernameB" type="text" disabled>
+            <button id="logout">Logout</button>
+            <br>
+            <br>
+            <label>Message:</label>
+            <br>
+            <textarea id="message" type="text" cols="45" rows="4" style="margin-bottom:4px;border-style:inset;"></textarea>
+            <br>
+            <button id="post">Post</button>
+            <br>
+            <br>
+        </div>
+        <h4>Posts:</h4>
+        <table style="width:77%;">
+            <thead>
+                <tr>
+                    <th><button id="refresh" style="margin-right:20em">Refresh</button><button id="prevMsg"><-</button> Messages <button id="nextMsg">-></button></th>
+                    <th><button id="prevUser"><-</button> Users <button id="nextUser">-></button></th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td style="border:1px solid grey;width:75%;padding:5px;">
+                        <div id="posts" ></div>
+                    </td>
+                    <td style="border:1px solid grey;width:25%;text-align:center;">
+                        <div id="users"></div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+        <div>
+            <h4>Console:</h4>
+            <pre style="overflow:auto;width:75%; height:300px; padding:10px; border:1px solid grey;" id="console"></pre>
+        </div>
+    </body>
+</html>

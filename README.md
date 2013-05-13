@@ -1,6 +1,6 @@
-### Installing RCP-Servlet:
+### Installing RpcServlet:
 
-RCP-Servlet was created with Java SE 6 so it is probably best to run it with Tomcat 6.
+RpcServlet was created with Java SE 6 so it is probably best to run it with Tomcat 6.
 
 Download Tomcat 6 and extract.
 

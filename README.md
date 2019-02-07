@@ -1,3 +1,5 @@
+Original Google Code repository: https://code.google.com/archive/p/rpc-servlet/
+
 ### Installing RpcServlet:
 
 RpcServlet was created with Java SE 6 so it is probably best to run it with Tomcat 6.

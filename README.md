@@ -8,7 +8,7 @@ Download Tomcat 6 and extract.
 
 Clone RpcServlet from GitHub using the following:
 	
-	$ git clone git@github.com:gazbond/RpcServlet.git
+	$ git clone git@github.com:gazbond/rpc-servlet.git
 
 Change directory to [rpc-servlet-directory] and run the ant build file using the following:
 	
